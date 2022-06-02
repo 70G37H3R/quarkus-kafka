@@ -49,13 +49,16 @@ public class TaskBean {
         }
     }
 
-    @Transactional
+    //return Device
     void performTask() {
         System.out.println("Cron expression configured in jobcontroller class");
         int lowerbound = 999999;
         int upperbound = 1000011;
         int deviceId = (int)Math.floor(Math.random()*(upperbound-lowerbound+1)+lowerbound);
-        deviceService.updateStatus(deviceId);
+        //get Device from deviceId
+
+
+        //deviceService.updateStatus(deviceId);
 
     }
 

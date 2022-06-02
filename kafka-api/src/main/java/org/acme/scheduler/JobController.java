@@ -29,7 +29,7 @@ public class JobController implements Job {
     }
 
     @POST
-    @Path("/getById/{id}")
+    @Path("/emitter")
     public Response enqueueDevice(@NotNull AvroDevice device) {
         log.info("Sending device demo %s to Kafka", device.getId());
         emitter.send(device);

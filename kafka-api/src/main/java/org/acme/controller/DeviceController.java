@@ -1,4 +1,6 @@
 package org.acme.controller;
+import io.smallrye.mutiny.Multi;
+import org.acme.kafka.AvroDevice;
 import org.acme.response.ResponseObject;
 import org.acme.service.device.Device;
 import org.acme.service.device.DeviceService;
@@ -12,6 +14,7 @@ import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
+import org.eclipse.microprofile.reactive.messaging.Channel;
 
 import javax.inject.Inject;
 import javax.validation.Valid;
@@ -35,6 +38,14 @@ public class DeviceController {
 
     @Inject
     DeviceService deviceService;
+
+    @Channel("demo-from-kafka")
+    Multi<AvroDevice> avroDevice;
+
+    @GET
+    public Multi<String> stream() {
+        return avroDevice.map(avroDevice -> String.format("'%s' from %s", avroDevice.getId(), avroDevice.getStatus()));
+    }
 
     @GET
     @APIResponse(
