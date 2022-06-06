@@ -1,7 +1,12 @@
 package org.acme.controller;
 
+import io.smallrye.common.annotation.NonBlocking;
+import io.smallrye.reactive.messaging.kafka.Record;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.acme.entity.DeviceEntity;
+import org.acme.kafka.AvroDevice;
+import org.acme.kafka.AvroMapper;
 import org.acme.response.ResponseObject;
 import org.acme.service.device.Device;
 import org.acme.service.device.DeviceService;
@@ -11,8 +16,10 @@ import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
+import org.eclipse.microprofile.reactive.messaging.Incoming;
 
 import javax.inject.Inject;
+import javax.transaction.Transactional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
@@ -34,6 +41,9 @@ public class DeviceController {
 
     @Inject
     DeviceService deviceService;
+
+    @Inject
+    AvroMapper avroMapper;
 
 
     @GET
@@ -204,6 +214,7 @@ public class DeviceController {
             return Response.serverError().entity(responseObject).build();
         }
     }
+
 
 }
 

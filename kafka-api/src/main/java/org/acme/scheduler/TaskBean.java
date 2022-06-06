@@ -2,6 +2,7 @@ package org.acme.scheduler;
 
 import io.quarkus.runtime.StartupEvent;
 import lombok.extern.slf4j.Slf4j;
+import org.acme.channel.outgoing.OutgoingChannel;
 import org.acme.kafka.AvroDevice;
 import org.acme.service.device.DeviceService;
 import org.acme.service.setting.SettingService;
@@ -14,6 +15,7 @@ import javax.inject.Inject;
 @Slf4j
 @ApplicationScoped
 public class TaskBean {
+
     @Inject
     DeviceService deviceService;
 
@@ -22,6 +24,9 @@ public class TaskBean {
 
     @Inject
     org.quartz.Scheduler quartz;
+
+    @Inject
+    OutgoingChannel outgoingChannel;
 
     public void onStart(@Observes StartupEvent event) {
         try {
@@ -46,16 +51,24 @@ public class TaskBean {
         }
     }
 
-    //return Device
-    public AvroDevice performTask() {
-        System.out.println("Cron expression configured in jobcontroller class");
-        //random device ID
-//        int lowerbound = 999999;
-//        int upperbound = 1000011;
-        //int deviceId = (int)Math.floor(Math.random()*(upperbound-lowerbound+1)+lowerbound);
-        int deviceId = 1000000;
-        return deviceService.buildCustomDeviceInfo(deviceId);
+    public void performTask(){
+        outgoingChannel.produceMsg(this.createMsg());
     }
+
+    public AvroDevice createMsg() {
+        System.out.println("Cron expression configured in jobcontroller class");
+        log.info("mapping device info into kafka topic");
+        //random device ID
+        int lowerbound = 1000000;
+        int upperbound = 1000009;
+        int deviceId = (int)Math.floor(Math.random()*(upperbound-lowerbound+1)+lowerbound);
+//        int deviceId = 1000000;
+        AvroDevice avroDevice =  deviceService.createAvroContent(deviceId);
+        return avroDevice;
+    }
+
+
+
 
 
 }

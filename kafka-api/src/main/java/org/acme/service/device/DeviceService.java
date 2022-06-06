@@ -1,4 +1,8 @@
 package org.acme.service.device;
+import io.smallrye.common.annotation.Blocking;
+import io.smallrye.reactive.messaging.kafka.KafkaRecord;
+import io.smallrye.reactive.messaging.kafka.KafkaRecordBatch;
+import io.smallrye.reactive.messaging.kafka.Record;
 import org.acme.entity.DeviceEntity;
 import org.acme.kafka.AvroDevice;
 import org.acme.kafka.AvroMapper;
@@ -8,6 +12,7 @@ import org.acme.exception.ServiceException;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.eclipse.microprofile.reactive.messaging.Incoming;
 
 
 import javax.enterprise.context.ApplicationScoped;
@@ -19,6 +24,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
+import java.util.concurrent.CompletionStage;
 
 @ApplicationScoped
 @Slf4j
@@ -103,8 +109,9 @@ public class DeviceService {
 
     @Transactional
     public void update(@NotNull @Valid Device device) {
-        log.info("Updating Device: {}", device);
+
         this.validateId(device);
+        log.info("Updating Device: {}", device);
         DeviceEntity entity = deviceRepository.findByIdOptional(device.getId())
                     .orElseThrow(() -> new ServiceException("No Device found for ID[%s]", device.getId()));
         deviceMapper.updateEntityFromDomain(device, entity);
@@ -113,35 +120,34 @@ public class DeviceService {
 
     }
 
+
     @Transactional
-    public void updateStatus(@NonNull Integer deviceId) {
-        log.info("Updating Device: {}", deviceId);
-
-        DeviceEntity entity = deviceRepository.findByIdOptional(deviceId)
-                .orElseThrow(() -> new ServiceException("No Device found for ID[%s]", deviceId));
-        String[] arr={"UP", "DOWN", "WARNING"};
-        Random r=new Random();
-        int randomNumber=r.nextInt(arr.length);
-        entity.setStatus(arr[randomNumber]);
-
+    public void updateStatus(@NotNull @Valid Device device) {
+        log.info("Updating Device: {}", device);
+        this.validateId(device);
+        DeviceEntity entity = deviceRepository.findByIdOptional(device.getId())
+                .orElseThrow(() -> new ServiceException("No Device found for ID[%s]", device.getId()));
+        deviceMapper.updateEntityFromDomain(device, entity);
         deviceRepository.persist(entity);
+        deviceMapper.updateDomainFromEntity(entity, device);
     }
 
     @Transactional
-    public AvroDevice buildCustomDeviceInfo(@NonNull Integer deviceId) {
+    public AvroDevice createAvroContent(@NonNull Integer deviceId) {
         log.info("Find device by id: {}", deviceId);
 
         String[] arr={"UP", "DOWN", "WARNING"};
         Random r=new Random();
         int randomNumber=r.nextInt(arr.length);
         try {
-            DeviceEntity entity = deviceRepository.findByIdOptional(deviceId)
-                    .orElseThrow(() -> new ServiceException("No Device found for ID[%s]", deviceId));
-            //Device deviceObject = deviceRepository.findByIdOptional(deviceId).map(deviceMapper::toDomain).get();
-            AvroDevice avroDevice = new AvroDevice(entity.getId()
-                    , entity.getName(), entity.getIpAddress(), entity.getMacAddress()
-                    , entity.getStatus(), entity.getType(), entity.getVersion());
-//        avroMapper.updateEntityFromDomain(deviceObject, avroDevice);
+//            DeviceEntity entity = deviceRepository.findByIdOptional(deviceId)
+//                    .orElseThrow(() -> new ServiceException("No Device found for ID[%s]", deviceId));
+//            AvroDevice avroDevice = new AvroDevice(entity.getId()
+//                    , entity.getName(), entity.getIpAddress(), entity.getMacAddress()
+//                    , entity.getStatus(), entity.getType(), entity.getVersion());
+            Device deviceObject = deviceRepository.findByIdOptional(deviceId).map(deviceMapper::toDomain).get();
+            AvroDevice avroDevice = new AvroDevice();
+            avroMapper.updateEntityFromDomain(deviceObject, avroDevice);
             avroDevice.setStatus(arr[randomNumber]);
             return avroDevice;
         } catch (Exception e) {
@@ -150,6 +156,7 @@ public class DeviceService {
         }
 
     }
+
 
     @Transactional
     public void deleteAll() {
