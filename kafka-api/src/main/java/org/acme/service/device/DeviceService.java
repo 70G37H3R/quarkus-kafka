@@ -1,5 +1,7 @@
 package org.acme.service.device;
 import org.acme.entity.DeviceEntity;
+import org.acme.kafka.AvroDevice;
+import org.acme.kafka.AvroMapper;
 import org.acme.repository.DeviceRepository;
 import org.acme.exception.ServiceException;
 
@@ -19,7 +21,6 @@ import java.util.Optional;
 import java.util.Random;
 
 @ApplicationScoped
-@AllArgsConstructor
 @Slf4j
 public class DeviceService {
 
@@ -28,6 +29,10 @@ public class DeviceService {
 
     @Inject
     DeviceMapper deviceMapper;
+
+    @Inject
+    AvroMapper avroMapper;
+
 
     public List<Device> findAll() {
         log.info("Find all devices: {}");
@@ -120,6 +125,30 @@ public class DeviceService {
         entity.setStatus(arr[randomNumber]);
 
         deviceRepository.persist(entity);
+    }
+
+    @Transactional
+    public AvroDevice buildCustomDeviceInfo(@NonNull Integer deviceId) {
+        log.info("Find device by id: {}", deviceId);
+
+        String[] arr={"UP", "DOWN", "WARNING"};
+        Random r=new Random();
+        int randomNumber=r.nextInt(arr.length);
+        try {
+            DeviceEntity entity = deviceRepository.findByIdOptional(deviceId)
+                    .orElseThrow(() -> new ServiceException("No Device found for ID[%s]", deviceId));
+            //Device deviceObject = deviceRepository.findByIdOptional(deviceId).map(deviceMapper::toDomain).get();
+            AvroDevice avroDevice = new AvroDevice(entity.getId()
+                    , entity.getName(), entity.getIpAddress(), entity.getMacAddress()
+                    , entity.getStatus(), entity.getType(), entity.getVersion());
+//        avroMapper.updateEntityFromDomain(deviceObject, avroDevice);
+            avroDevice.setStatus(arr[randomNumber]);
+            return avroDevice;
+        } catch (Exception e) {
+            log.error("Failed to build random device, caused by ", e);
+            return AvroDevice.newBuilder().build();
+        }
+
     }
 
     @Transactional

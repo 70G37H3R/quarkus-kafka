@@ -1,8 +1,8 @@
 package org.acme.scheduler;
 
-
 import io.quarkus.runtime.StartupEvent;
 import lombok.extern.slf4j.Slf4j;
+import org.acme.kafka.AvroDevice;
 import org.acme.service.device.DeviceService;
 import org.acme.service.setting.SettingService;
 import org.quartz.*;
@@ -10,13 +10,10 @@ import org.quartz.*;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
-import javax.transaction.Transactional;
 
-
-@ApplicationScoped
 @Slf4j
+@ApplicationScoped
 public class TaskBean {
-
     @Inject
     DeviceService deviceService;
 
@@ -45,21 +42,19 @@ public class TaskBean {
                     .build();
             quartz.scheduleJob(job, trigger);
         } catch (Exception e) {
-            log.error("Failed to start job, caused by ", e);
+            log.error("Failed to start TASK BEAN, caused by ", e);
         }
     }
 
     //return Device
-    void performTask() {
+    public AvroDevice performTask() {
         System.out.println("Cron expression configured in jobcontroller class");
-        int lowerbound = 999999;
-        int upperbound = 1000011;
-        int deviceId = (int)Math.floor(Math.random()*(upperbound-lowerbound+1)+lowerbound);
-        //get Device from deviceId
-
-
-        //deviceService.updateStatus(deviceId);
-
+        //random device ID
+//        int lowerbound = 999999;
+//        int upperbound = 1000011;
+        //int deviceId = (int)Math.floor(Math.random()*(upperbound-lowerbound+1)+lowerbound);
+        int deviceId = 1000000;
+        return deviceService.buildCustomDeviceInfo(deviceId);
     }
 
 

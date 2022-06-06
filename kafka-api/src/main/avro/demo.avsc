@@ -3,33 +3,12 @@
   "type": "record",
   "name": "AvroDevice",
   "fields": [
-    {
-      "name": "id",
-      "type": "int"
-    },
-    {
-      "name": "name",
-      "type": "string"
-    },
-    {
-      "name": "ipAddress",
-      "type": "string"
-    },
-    {
-      "name": "macAddress",
-      "type": "string"
-    },
-    {
-      "name": "status",
-      "type": "string"
-    },
-    {
-      "name": "type",
-      "type": "string"
-    },
-    {
-      "name": "version",
-      "type": "string"
-    }
+    { "name": "id", "type": "int", "default": 0 },
+    { "name": "name", "type": [ "string", "null" ], "default": "null" },
+    { "name": "ipAddress", "type": [ "string", "null" ], "default": "null" },
+    { "name": "macAddress", "type": [ "string", "null" ], "default": "null" },
+    { "name": "status", "type": [ "string", "null" ], "default": "null" },
+    { "name": "type", "type": [ "string", "null" ], "default": "null" },
+    { "name": "version", "type": [ "string", "null" ], "default": "null" }
   ]
 }
